@@ -1,12 +1,12 @@
 import os
 import rospy
+from std_msgs.msg import String
 
 from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
 
 class MyPlugin(Plugin):
-
     def __init__(self, context):
         super(MyPlugin, self).__init__(context)
         # Give QObjects reasonable names
@@ -46,12 +46,15 @@ class MyPlugin(Plugin):
         # UI interaction
         self._widget.loadProgramButton.clicked.connect(self._loadProgram)
         self._widget.loadPointsButton.clicked.connect(self._loadPoints)
+        self.pub = rospy.Publisher('execute_instruction', String, queue_size=10)
+        #rospy.init_node('rqt_arm_control_py', anonymous=True)
         
     def _loadProgram(self):
-        self._widget.textEdit.setText('Load Program Clicked!!!')
+        self.pub.publish(self._widget.textEdit.toPlainText())
 
     def _loadPoints(self):
         self._widget.textEdit.setText('Load Points Clicked!!!')
+        self.pub.publish('Load Points Clicked!!!')
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here
