@@ -12,7 +12,7 @@
         <label>Subgroup</label>
       </group>
       -->
-      <label>Execute node</label>
+      <label>My first Python Plugin</label>
       <icon type="theme">system-help</icon>
       <statustip>Great user interface to provide real value.</statustip>
     </qtgui>

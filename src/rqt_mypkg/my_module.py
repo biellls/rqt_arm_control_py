@@ -47,7 +47,6 @@ class MyPlugin(Plugin):
         self._widget.loadProgramButton.clicked.connect(self._loadProgram)
         self._widget.loadPointsButton.clicked.connect(self._loadPoints)
         self.pub = rospy.Publisher('execute_instruction', String, queue_size=10)
-        #rospy.init_node('rqt_arm_control_py', anonymous=True)
         
     def _loadProgram(self):
         self.pub.publish(self._widget.textEdit.toPlainText())
