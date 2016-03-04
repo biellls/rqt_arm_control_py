@@ -1,10 +1,13 @@
 import os
 import rospy
+import sys
 from std_msgs.msg import String
 
 from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
 from python_qt_binding.QtGui import QWidget
+from PyQt4.QtGui import QFileDialog, QMessageBox
+
 
 class MyPlugin(Plugin):
     def __init__(self, context):
@@ -46,28 +49,87 @@ class MyPlugin(Plugin):
         # UI interaction
         self._widget.loadProgramButton.clicked.connect(self._loadProgram)
         self._widget.loadPointsButton.clicked.connect(self._loadPoints)
+        self._widget.sendButton.clicked.connect(self._sendInstruction)
+        self._widget.chooseProgramButton.clicked.connect(self._chooseProgram)
+        self._widget.choosePointsButton.clicked.connect(self._choosePoints)
         self.pub = rospy.Publisher('execute_instruction', String, queue_size=10)
         
+
+    def publish_file(self, fname):
+        try:
+            with open(fname) as f:
+                for line in f:
+                    self.pub.publish(line.strip('\n'))
+        except IOError:
+            QMessageBox.warning(self._widget, "Error opening file", "Error opening file: %s"%fname)
+            sys.stderr.write("Error opening file: %s \n"%fname)
+        
+
     def _loadProgram(self):
-        self.pub.publish(self._widget.textEdit.toPlainText())
+        fname = self._widget.programPathTextEdit.toPlainText()
+        if fname == "":
+            sys.stderr.write("No file specified\n")
+            QMessageBox.warning(self._widget, "Error loading program", "Please specify a file")
+            return
+            
+        if not fname.endswith(".mb4"):
+            sys.stderr.write("Please choose .mb4 file\n")
+            QMessageBox.warning(self._widget, "Error loading program", "Wrong extension: Please choose .mb4 file")
+            return
+
+        self.pub.publish('---LOAD PROGRAM BEGIN---')
+        self.publish_file(fname)
+        self.pub.publish('---LOAD PROGRAM END---')
+
 
     def _loadPoints(self):
-        self._widget.textEdit.setText('Load Points Clicked!!!')
-        self.pub.publish('Load Points Clicked!!!')
+        fname = self._widget.programPointsTextEdit.toPlainText()
+        if fname == "":
+            sys.stderr.write("No file specified\n")
+            QMessageBox.warning(self._widget, "Error loading points", "Please specify a file")
+            return
+            
+        if not fname.endswith(".pos"):
+            sys.stderr.write("Please choose .pos file\n")
+            QMessageBox.warning(self._widget, "Error loading points", "Wrong extension: Please choose .pos file")
+            return
+
+        self.pub.publish('---LOAD POINTS BEGIN---')
+        self.publish_file(fname)
+        self.pub.publish('---LOAD POINTS END---')
+        
+
+    def _sendInstruction(self):
+        self.pub.publish('---SINGLE INSTRUCTION---')
+        self.pub.publish(self._widget.textEdit.toPlainText())
+        
+
+    def _chooseProgram(self):
+        fname=QFileDialog.getOpenFileName()
+        self._widget.programPathTextEdit.setText(fname[0])
+
+
+    def _choosePoints(self):
+        fname=QFileDialog.getOpenFileName()
+        self._widget.pointsPathTextEdit.setText(fname[0])
+
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here
         pass
+
 
     def save_settings(self, plugin_settings, instance_settings):
         # TODO save intrinsic configuration, usually using:
         # instance_settings.set_value(k, v)
         pass
 
+
     def restore_settings(self, plugin_settings, instance_settings):
         # TODO restore intrinsic configuration, usually using:
         # v = instance_settings.value(k)
         pass
+
 
     #def trigger_configuration(self):
         # Comment in to signal that the plugin has a way to configure
