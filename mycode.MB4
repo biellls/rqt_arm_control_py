@@ -1,0 +1,141 @@
+10 DEF DOUBLE oPx, oPy, angle, cPx, cPy, alt, radi, diam 'Punts caracteritzacio sistema
+20 DEF INTE npesa
+30 DEF POS Ppila
+40 DEF POS Pi, Po 'Punts entrada i sortida subrutina transformació
+50 'Definir punts inicials
+60 'Centre de la piràmide
+70 oPx=16.4
+80 oPy=550.0
+90 'Posició de la pila de peçes
+100 Ppila = PCOLOC
+110     radi=27
+120 diam=54
+130 'Posició de la càmara
+140 cPx=0 + 2*diam
+150 cPy=0 + diam
+160 angle = rad(0)
+170 alt=17
+180
+190 'Punt inicial
+200
+210 'Programa principal
+220 SERVO ON
+230 OVRD 30
+240 SPD 30
+250
+260 MOV PINIC
+270 HOPEN 1
+
+280 npesa = 1
+290 While npesa <= 6
+300             GOSUB *AgPI 'Agafam pesa inicial
+310             GOSUB *ColPPir
+320     npesa = npesa + 1
+330     WEND
+340     npesa = npesa - 1
+350     DLY 4
+360     While npesa > 0
+370             GOSUB *AgPPir
+380             GOSUB *ColPPal
+390             npesa = npesa - 1
+400     WEND
+410
+420 MOV PINIC
+
+430 END
+440
+
+450 'Subrutines
+460     'Agafa la peça després de calcular la posició on es troba
+470     *AgPI
+480     GOSUB *CalPPil  'Deixa la posició dins Po
+490     Pi = Po
+500     GOSUB *AgP
+510     RETURN
+
+530     'Donat un numero de peça (npeça) calcula la posició de la peça
+540     'a partir de la posició inicial de la pila
+550     'Retorna el resultat dins Po
+560     'CALCULA_POS_PILA
+570 *CalPPil
+580     Po = Ppila
+590     IF npesa > 3 THEN Po.x = Po.x - diam   'IF npesa mod 2 = 0 THEN Po.x = Po.x - diam
+600     IF npesa = 2 THEN Po.z = Po.z - alt
+610     IF npesa = 3 THEN Po.z = Po.z - (2 * alt)
+620     IF npesa = 5 THEN Po.z = Po.z - alt
+630     IF npesa = 6 THEN Po.z = Po.z - (2 * alt)
+640     RETURN
+
+650     'COLOCA_PESA_PIRAMIDE
+660 *ColPPir
+670     GOSUB *CalPPir
+680     Pi = Po
+690     GOSUB *DeP
+700     RETURN
+
+710     'CALCULA_POS_PIRAMIDE
+720 *CalPPir
+730     Po = Ppiram
+740 Po.X = 0
+750 Po.Y = 0
+760     SELECT npesa
+770     CASE 1
+780             Po.y = Po.y - diam
+790     CASE 3
+800             Po.y = Po.y + diam
+810     CASE 4
+820             Po.y = Po.y - radi
+830     CASE 5
+840             Po.y = Po.y + radi
+850     END SELECT
+860     IF npesa > 3 THEN Po.z = Po.z + alt
+870     IF npesa = 6 THEN Po.z = Po.z + alt
+880 Pi=Po
+890 GOSUB *TR_OR
+900     RETURN
+
+910     'AGAFA_PESA_PIRAM
+920 *AgPPir
+930     GOSUB *CalPPir
+940     Pi = Po
+950     GOSUB *AgP
+960     RETURN
+
+970     'AGAFA_PESA
+980 *AgP
+990     MOV Pi, - 30
+1000 OVRD 5
+1010 SPD 5
+1020    MOV Pi
+1030    HCLOSE 1
+
+1040 MOV Pi, -30
+1050 OVRD 30
+1060 SPD 30
+1070    RETURN
+
+1080    *DeP 'DEIXA_PESA
+1090    MOV Pi, - 30
+1100    MOV Pi
+1110    HOPEN 1
+1120 MOV Pi, -30
+1130    RETURN
+
+1140    'COLOCA_PESA_PAL
+1150 *ColPPal
+1160    Pi = Ppal
+1170    GOSUB *DeP
+1180    MOV Pi, -50
+1190    RETURN
+
+1200 *TR_OR 'Subrutina càlcul de les transformacions objecte - robot
+1210 'Pi conté el punt a transformar. Po és el punt transformat
+1220 Po = Pi
+1230 Po.X = Pi.X * COS(angle) - SIN(angle)* Pi.Y + oPy + cPx
+1240 Po.Y = Pi.X * SIN(angle) + Pi.Y * COS(angle) + oPx + cPy
+1250 Po.Z = Pi.Z
+1260 Po.A = rad(180)
+1270 Po.B = 0
+1280 Po.C = Pi.C + angle
+1290 RETURN
+1300

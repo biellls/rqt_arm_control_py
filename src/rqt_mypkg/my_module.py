@@ -52,6 +52,7 @@ class MyPlugin(Plugin):
         self._widget.sendButton.clicked.connect(self._sendInstruction)
         self._widget.chooseProgramButton.clicked.connect(self._chooseProgram)
         self._widget.choosePointsButton.clicked.connect(self._choosePoints)
+        self._widget.runButton.clicked.connect(self._runProgram)
         self.pub = rospy.Publisher('execute_instruction', String, queue_size=10)
         
 
@@ -72,8 +73,8 @@ class MyPlugin(Plugin):
             QMessageBox.warning(self._widget, "Error loading program", "Please specify a file")
             return
             
-        if not fname.endswith(".mb4"):
-            sys.stderr.write("Please choose .mb4 file\n")
+        if not fname.endswith(".MB4"):
+            sys.stderr.write("Please choose .MB4 file\n")
             QMessageBox.warning(self._widget, "Error loading program", "Wrong extension: Please choose .mb4 file")
             return
 
@@ -83,14 +84,14 @@ class MyPlugin(Plugin):
 
 
     def _loadPoints(self):
-        fname = self._widget.programPointsTextEdit.toPlainText()
+        fname = self._widget.pointsPathTextEdit.toPlainText()
         if fname == "":
             sys.stderr.write("No file specified\n")
             QMessageBox.warning(self._widget, "Error loading points", "Please specify a file")
             return
             
-        if not fname.endswith(".pos"):
-            sys.stderr.write("Please choose .pos file\n")
+        if not fname.endswith(".POS"):
+            sys.stderr.write("Please choose .POS file\n")
             QMessageBox.warning(self._widget, "Error loading points", "Wrong extension: Please choose .pos file")
             return
 
@@ -98,6 +99,9 @@ class MyPlugin(Plugin):
         self.publish_file(fname)
         self.pub.publish('---LOAD POINTS END---')
         
+        
+    def _runProgram(self):
+        self.pub.publish('---RUN PROGRAM---')
 
     def _sendInstruction(self):
         self.pub.publish('---SINGLE INSTRUCTION---')
